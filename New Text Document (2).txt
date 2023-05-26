@@ -1,0 +1,313 @@
+Computer Network Lab Assignment
+(CS - 691)
+CSE 3rd Year, 6th Sem.
+Page - 1
+5. Write a Socket program to implement Simple Server & Simple Client (echo Server & echo Client).
+//Program for simple server...
+#include<sys/types.h>
+#include<sys/socket.h>
+#include<stdio.h>
+#include<string.h>
+#include<sys/un.h>
+#include<unistd.h>
+void main() {
+int server_sockfd, client_sockfd;
+int server_len, client_len;
+char out_buf[100];
+char in_buf[100];
+struct sockaddr_un server_address;
+struct sockaddr_un client_address;
+unlink("server_socket");
+server_sockfd=socket(AF_UNIX, SOCK_STREAM, 0);
+server_address.sun_family=AF_UNIX;
+strcpy(server_address.sun_path, "server_socket");
+server_len=sizeof(server_address);
+bind(server_sockfd, (struct sockaddr *)&server_address, server_len);
+listen(server_sockfd, 5);
+client_len=sizeof(client_address);
+client_sockfd=accept(server_sockfd, (struct sockaddr *)&client_address, &client_len);
+strcpy(out_buf, "Test message from server to client");
+send(client_sockfd, out_buf, (strlen(out_buf)+1), 0);
+recv(client_sockfd, in_buf, sizeof(in_buf), 0);
+printf("Received from client...data='%s'\n", in_buf);
+close(server_sockfd);
+close(client_sockfd);
+}
+Computer Network Lab Assignment
+(CS - 691)
+CSE 3rd Year, 6th Sem.
+Page - 2
+//Program for simple client...
+#include<sys/types.h>
+#include<sys/socket.h>
+#include<stdio.h>
+#include<string.h>
+#include<sys/un.h>
+#include<unistd.h>
+void main() {
+int client_sockfd;
+int client_len;
+char out_buf[100];
+char in_buf[100];
+struct sockaddr_un client_address;
+client_sockfd=socket(AF_UNIX, SOCK_STREAM, 0);
+client_address.sun_family=AF_UNIX;
+strcpy(client_address.sun_path, "server_socket");
+client_len=sizeof(client_address);
+connect(client_sockfd, (struct sockaddr *)&client_address, client_len);
+recv(client_sockfd, in_buf, sizeof(in_buf), 0);
+printf("Received from server...data='%s'\n", in_buf);
+strcpy(out_buf, "Test message from client to server...");
+send(client_sockfd, out_buf, (strlen(out_buf)+1), 0);
+close(client_sockfd);
+}
+Computer Network Lab Assignment
+(CS - 691)
+CSE 3rd Year, 6th Sem.
+Page - 3
+6. Write a Socket program to implement TCP Server & TCP Client.
+//Program for tcp server...
+#include<sys/types.h>
+#include<sys/socket.h>
+#include<stdio.h>
+#include<string.h>
+#include<netinet/in.h>
+#include<arpa/inet.h>
+#include<unistd.h>
+#include<netdb.h>
+#include<fcntl.h>
+#define PORT_NUM 2500
+int main() {
+int server_sockfd, client_sockfd;
+int server_len, client_len;
+char out_buf[100];
+char in_buf[100];
+struct in_addr client_ip_addr;
+struct sockaddr_in server_address;
+struct sockaddr_in client_address;
+unlink("server socket");
+server_sockfd=socket(AF_INET, SOCK_STREAM, 0);
+server_address.sin_family=AF_INET;
+server_address.sin_port=htons(PORT_NUM);
+server_address.sin_addr.s_addr=htonl(INADDR_ANY);
+server_len=sizeof(server_address);
+bind(server_sockfd, (struct sockaddr *)&server_address, server_len);
+listen(server_sockfd, 5);
+client_len=sizeof(client_address);
+client_sockfd=accept(server_sockfd, (struct sockaddr *)&client_address, &client_len);
+memcpy(&client_ip_addr, &client_address.sin_addr.s_addr,4);
+printf("Accept completed (IP address of client=%s port=%d) \n",inet_ntoa(client_ip_addr),
+ntohs(client_address.sin_port));
+//strcpy(out_buf, "Hi... Mr. Client");
+while(1) {
+printf("Nter ur Mesg...");
+scanf("%s",out_buf);
+send(client_sockfd, out_buf, (strlen(out_buf)+1), 0);
+recv(client_sockfd, in_buf, sizeof(in_buf), 0);
+printf("Received from client...Mesg='%s'\n", in_buf);
+}
+close(server_sockfd);
+close(client_sockfd);
+}
+Computer Network Lab Assignment
+(CS - 691)
+CSE 3rd Year, 6th Sem.
+Page - 4
+//Program for tcp client...
+#include<sys/types.h>
+#include<sys/socket.h>
+#include<stdio.h>
+#include<string.h>
+#include<netinet/in.h>
+#include<arpa/inet.h>
+#include<netdb.h>
+#include<fcntl.h>
+#include<unistd.h>
+#define PORT_NUM 2500
+#define IP_ADDR "127.0.0.1"
+int main() {
+int client_sockfd;
+int server_len;
+char out_buf[100];
+char in_buf[100];
+struct sockaddr_in server_address;
+client_sockfd=socket(AF_INET, SOCK_STREAM, 0);
+server_address.sin_family=AF_INET;
+server_address.sin_port=htons(PORT_NUM);
+server_address.sin_addr.s_addr=inet_addr(IP_ADDR);
+server_len=sizeof(server_address);
+connect(client_sockfd, (struct sockaddr *)&server_address, server_len);
+while(1) {
+recv(client_sockfd, in_buf, sizeof(in_buf), 0);
+printf("Received from server...Mesg='%s'\n", in_buf);
+//strcpy(out_buf, "Hello Mr. Server..How r u?");
+printf("Nter ur Mesg...");
+scanf("%s",out_buf);
+send(client_sockfd, out_buf, (strlen(out_buf)+1), 0);
+}
+close(client_sockfd);
+}
+Computer Network Lab Assignment
+(CS - 691)
+CSE 3rd Year, 6th Sem.
+Page - 5
+7. Write a Socket program to implement UDP Server & UDP Client.
+//Program for UDP server...
+#include<sys/types.h>
+#include<sys/socket.h>
+#include<stdio.h>
+#include<string.h>
+#include<netinet/in.h>
+#include<arpa/inet.h>
+#include<unistd.h>
+#include<netdb.h>
+#include<fcntl.h>
+#define PORT_NUM 1500
+int main() {
+int sock;
+int len;
+char out_buf[100];
+char in_buf[100];
+struct sockaddr_in server,client;
+sock=socket(AF_INET, SOCK_DGRAM, 0);
+server.sin_family=AF_INET;
+server.sin_port=htons(PORT_NUM);
+server.sin_addr.s_addr=htonl(INADDR_ANY);
+len=sizeof(struct sockaddr_in);
+bind(sock, (struct sockaddr *)&server,len);
+printf("Server is waiting...\n");
+recvfrom(sock, in_buf, sizeof(in_buf), 0, (struct sockaddr*)&client, &len);
+printf("Request accepted....\n);
+printf("Received from client...Mesg='%s'\n", in_buf);
+strcpy(out_buf, "Hi... Mr. Client..I hv gt ur message");
+sendto(sock, out_buf, (strlen(out_buf)+1), 0, (struct sockaddr*)&client, len);
+close(sock);
+}
+Computer Network Lab Assignment
+(CS - 691)
+CSE 3rd Year, 6th Sem.
+Page - 6
+//Program for UDP client...
+#include<sys/types.h>
+#include<sys/socket.h>
+#include<stdio.h>
+#include<string.h>
+#include<netinet/in.h>
+#include<arpa/inet.h>
+#include<unistd.h>
+#include<netdb.h>
+#include<fcntl.h>
+#define PORT_NUM 1500
+#define SERVER_IP "x.x.x.x"
+int main() {
+int sock;
+int len;
+char out_buf[100];
+char in_buf[100];
+struct sockaddr_in server;
+sock=socket(AF_INET, SOCK_DGRAM, 0);
+server.sin_family=AF_INET;
+server.sin_port=htons(PORT_NUM);
+server.sin_addr.s_addr=inet_addr(SERVER_IP);
+len=sizeof(struct sockaddr_in);
+strcpy(out_buf, "Hello..Mr.Server..I am connenting with u..");
+sendto(sock, out_buf, (strlen(out_buf)+1), 0, (struct sockaddr*)&server, len);
+recvfrom(sock, in_buf, sizeof(in_buf), 0, (struct sockaddr*)&server, &len);
+printf("Received from Server...Mesg='%s'\n", in_buf);
+close(sock);
+}
+Computer Network Lab Assignment
+(CS - 691)
+CSE 3rd Year, 6th Sem.
+Page - 7
+8. Write a Socket program to implement Multicast Server Client using Process.
+/* mcastServer.c */
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <netdb.h>
+#include <stdio.h>
+#include <unistd.h>
+#define SERVER_PORT 1500
+#define MAX_MSG 100
+int main(int argc, char *argv[]) {
+int sd, rc, i;
+unsigned char ttl = 1;
+struct sockaddr_in cliAddr, servAddr;
+struct hostent *h;
+if(argc<3) {
+printf("usage %s <mgroup> <data1> <data2> ... <dataN>\n",argv[0]);
+exit(1);
+}
+h = gethostbyname(argv[1]);
+servAddr.sin_family = h->h_addrtype;
+memcpy((char *) &servAddr.sin_addr.s_addr, h->h_addr_list[0],h->h_length);
+servAddr.sin_port = htons(SERVER_PORT);
+/* Create Socket */
+sd = socket(AF_INET,SOCK_DGRAM,0);
+/* bind any port number */
+cliAddr.sin_family = AF_INET;
+cliAddr.sin_addr.s_addr = htonl(INADDR_ANY);
+cliAddr.sin_port = htons(0);
+bind(sd,(struct sockaddr *) &cliAddr,sizeof(cliAddr))
+setsockopt(sd,IPPROTO_IP,IP_MULTICAST_TTL, &ttl,sizeof(ttl))
+printf("%s : sending data on multicast group '%s' (%s)\n",argv[0],
+h->h_name,inet_ntoa(*(struct in_addr *) h->h_addr_list[0]));
+/* send data */
+for(i=2;i<argc;i++) {
+sendto(sd,argv[i],strlen(argv[i])+1,0,
+(struct sockaddr *) &servAddr, sizeof(servAddr));
+}/* end for */
+/* close socket and exit */
+close(sd);
+}
+Computer Network Lab Assignment
+(CS - 691)
+CSE 3rd Year, 6th Sem.
+Page - 8
+// mcastClient.c
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <netdb.h>
+#include <stdio.h>
+#include <unistd.h>
+#define SERVER_PORT 1500
+#define MAX_MSG 100
+int main(int argc, char *argv[])
+{
+int sd, rc, n, cliLen;
+struct ip_mreq mreq;
+struct sockaddr_in cliAddr, servAddr;
+struct in_addr mcastAddr;
+struct hostent *h;
+char msg[MAX_MSG];
+if(argc!=2)
+{
+printf("usage : %s <mcast address>\n",argv[0]);
+exit(0);
+}
+/* get mcast address to listen to */
+h=gethostbyname(argv[1]);
+memcpy(&mcastAddr, h->h_addr_list[0],h->h_length);
+// Create Socket
+sd = socket(AF_INET,SOCK_DGRAM,0);
+// bind port
+servAddr.sin_family=AF_INET;
+servAddr.sin_addr.s_addr=htonl(INADDR_ANY);
+servAddr.sin_port=htons(SERVER_PORT);
+bind(sd,(struct sockaddr *) &servAddr, sizeof(servAddr))
+/* join multicast group */
+mreq.imr_multiaddr.s_addr=mcastAddr.s_addr;
+mreq.imr_interface.s_addr=htonl(INADDR_ANY);
+setsockopt(sd,IPPROTO_IP,IP_ADD_MEMBERSHIP, (void *) &mreq, sizeof(mreq));
+printf("%s : listening to mgroup %s:%d\n", argv[0],inet_ntoa(mcastAddr), SERVER_PORT);
+/* infinite server loop */
+while(1) {
+cliLen=sizeof(cliAddr);
+n = recvfrom(sd,msg,MAX_MSG,0,(struct sockaddr *) &cliAddr,&cliLen);
+printf("%s : from %s:%d on %s : %s\n",argv[0], inet_ntoa(cliAddr.sin_addr),ntohs(cliAddr.sin_port),argv[1],msg);
+}/* end of infinite server loop */
+}
